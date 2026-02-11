@@ -7,7 +7,7 @@ prefix := "claude-"
 
 # Install Colima + Docker CLI and start the VM
 setup:
-    brew install colima docker
+    brew install colima docker docker-buildx
     colima start --cpu 4 --memory 8 --disk 60 --vm-type vz --vz-rosetta
 
 # Start Colima VM
@@ -131,7 +131,8 @@ destroy name:
 
 # List all claude containers
 list:
-    docker ps -a --filter "name=^{{prefix}}" --format "table {{{{.Names}}}}\t{{{{.Status}}}}\t{{{{.Image}}}}"
+    #!/usr/bin/env bash
+    docker ps -a --filter "name=^{{prefix}}" --format "table {{'{{'}}.Names{{'}}'}}\t{{'{{'}}.Status{{'}}'}}\t{{'{{'}}.Image{{'}}'}}"
 
 # Show container logs
 logs name:

@@ -1,8 +1,10 @@
 FROM debian:bookworm-slim
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # ── System packages ──────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        git curl ca-certificates sudo \
+        apt-utils git curl ca-certificates sudo \
         build-essential \
         python3 python3-dev python3-venv \
         r-base \
@@ -21,8 +23,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 # ── DuckDB CLI (architecture-aware) ─────────────────────────────
 ARG DUCKDB_VERSION=1.4.3
 RUN ARCH=$(dpkg --print-architecture) \
-    && if [ "$ARCH" = "arm64" ]; then DUCKDB_ARCH="aarch64"; else DUCKDB_ARCH="amd64"; fi \
-    && curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_cli-linux-${DUCKDB_ARCH}.zip" -o /tmp/duckdb.zip \
+    && curl -fsSL "https://github.com/duckdb/duckdb/releases/download/v${DUCKDB_VERSION}/duckdb_cli-linux-${ARCH}.zip" -o /tmp/duckdb.zip \
     && apt-get update && apt-get install -y --no-install-recommends unzip \
     && unzip /tmp/duckdb.zip -d /usr/local/bin \
     && chmod +x /usr/local/bin/duckdb \
@@ -45,7 +46,7 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/home/coder/.local/bin:${PATH}"
 
 # ── Claude Code CLI ──────────────────────────────────────────────
-RUN curl -fsSL https://claude.ai/install.sh | sh
+RUN curl -fsSL https://claude.ai/install.sh | bash
 
 # ── Config files ─────────────────────────────────────────────────
 RUN mkdir -p /home/coder/.claude
