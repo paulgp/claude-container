@@ -67,6 +67,33 @@ Pass additional mounts, ports, or env vars when creating a container:
 just create my-project -- -p 8080:8080 -e SECRET=val --mount type=bind,src=/data,dst=/data
 ```
 
+## Using `ccr` From Anywhere
+
+The `ccr` (Claude Container Runner) script lets you run any recipe from any directory without `cd`-ing into this repo. To set it up:
+
+```bash
+# Copy the script to somewhere on your PATH
+cp ccr ~/bin/ccr    # or /usr/local/bin/ccr
+chmod +x ~/bin/ccr
+```
+
+If you cloned this repo somewhere other than `~/repos/claude-container`, set the path:
+
+```bash
+# In your ~/.zshrc
+export CLAUDE_CONTAINER_DIR="$HOME/path/to/claude-container"
+```
+
+Then use `ccr` instead of `just` from anywhere:
+
+```bash
+ccr build
+ccr create my-project
+ccr claude my-project
+ccr list
+ccr --recipes          # show all available recipes
+```
+
 ## How It Works
 
 - **Colima** provides the Docker runtime (free, uses Apple Virtualization.framework)

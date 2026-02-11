@@ -1,0 +1,42 @@
+#!/usr/bin/env zsh
+# ccr — Claude Container Runner
+# Wrapper to run claude-container just recipes from anywhere.
+
+set -euo pipefail
+
+# Set this to wherever you cloned claude-container, or override with the
+# environment variable CLAUDE_CONTAINER_DIR.
+CLAUDE_CONTAINER_DIR="${CLAUDE_CONTAINER_DIR:-$HOME/repos/claude-container}"
+
+if [[ ! -f "$CLAUDE_CONTAINER_DIR/Justfile" ]]; then
+    echo "Error: claude-container not found at $CLAUDE_CONTAINER_DIR" >&2
+    echo "Set CLAUDE_CONTAINER_DIR to the correct path." >&2
+    exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+    echo "Usage: ccr <recipe> [args...]"
+    echo ""
+    echo "Examples:"
+    echo "  ccr build                        Build the container image"
+    echo "  ccr create my-project            Create a new container"
+    echo "  ccr claude my-project            Start Claude in YOLO mode"
+    echo "  ccr claude my-project \"prompt\"    Run Claude with a prompt"
+    echo "  ccr claude-safe my-project       Start Claude in safe mode"
+    echo "  ccr login my-project             Log in with subscription"
+    echo "  ccr shell my-project             Open a shell"
+    echo "  ccr stop my-project              Stop a container"
+    echo "  ccr destroy my-project           Remove a container"
+    echo "  ccr list                         List all containers"
+    echo "  ccr stats                        Show resource usage"
+    echo ""
+    echo "Run 'ccr --recipes' to see all available recipes."
+    exit 0
+fi
+
+if [[ "$1" == "--recipes" ]]; then
+    just --justfile "$CLAUDE_CONTAINER_DIR/Justfile" --working-directory "$CLAUDE_CONTAINER_DIR" --list
+    exit 0
+fi
+
+exec just --justfile "$CLAUDE_CONTAINER_DIR/Justfile" --working-directory "$CLAUDE_CONTAINER_DIR" "$@"
