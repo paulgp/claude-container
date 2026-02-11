@@ -124,6 +124,34 @@ You are now "inside" the project folder. **All `just` commands must be run from 
 cd /path/to/claude-container
 ```
 
+> **Tip: Run commands from anywhere with `ccr`**
+>
+> The repo includes a small script called `ccr` (Claude Container Runner) that lets you run any recipe from any folder — no need to `cd` back here each time. To set it up:
+>
+> ```bash
+> # Copy the script to a folder on your PATH
+> cp ccr ~/bin/ccr       # or /usr/local/bin/ccr
+> chmod +x ~/bin/ccr
+> ```
+>
+> If you cloned this repo somewhere other than `~/repos/claude-container`, tell `ccr` where to find it by adding this line to your `~/.zshrc`:
+>
+> ```bash
+> export CLAUDE_CONTAINER_DIR="$HOME/path/to/claude-container"
+> ```
+>
+> Then, anywhere on your system, use `ccr` instead of `just`:
+>
+> ```bash
+> ccr build
+> ccr create my-project
+> ccr claude my-project
+> ccr list
+> ccr --recipes          # show all available recipes
+> ```
+>
+> All the examples in this guide use `just`, but you can always substitute `ccr` if you've set it up.
+
 ### Step 2: Set up authentication
 
 You have two options depending on how you pay for Claude. **Pick one:**
