@@ -19,6 +19,7 @@ You are running inside an isolated Docker container (Debian bookworm). You have 
 | just | Command runner |
 | build-essential | gcc, g++, make, etc. |
 | claude | Claude Code CLI |
+| pi | Pi Coding Agent — run with `pi`, configure provider via env vars |
 
 ## Installing Extra Packages
 

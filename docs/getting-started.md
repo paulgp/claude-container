@@ -8,6 +8,8 @@
 - [Installation: Step by Step](#installation-step-by-step)
 - [Your First Project](#your-first-project)
 - [Working With Claude Inside the Container](#working-with-claude-inside-the-container)
+- [Working With Pi Inside the Container](#working-with-pi-inside-the-container)
+- [Per-Project Agent Config (agent-sync)](#per-project-agent-config-agent-sync)
 - [Managing Your Containers](#managing-your-containers)
 - [Moving Files In and Out](#moving-files-in-and-out)
 - [Use Cases for Academic Research](#use-cases-for-academic-research)
@@ -19,11 +21,11 @@
 
 ## What Is This and Why Should I Care?
 
-Claude Code is an AI assistant that can read, write, and run code directly on your computer. It is incredibly powerful — it can install software, create files, run scripts, and modify your system. That power is also what makes it risky. If you ask Claude to "clean up my project" and it misunderstands, it could delete files you care about. If a script goes wrong, it could affect other things on your machine.
+Claude Code and Pi are AI assistants that can read, write, and run code directly on your computer. They are incredibly powerful — they can install software, create files, run scripts, and modify your system. That power is also what makes them risky. If you ask one to "clean up my project" and it misunderstands, it could delete files you care about. If a script goes wrong, it could affect other things on your machine.
 
-**Claude Container solves this problem.** It gives Claude its own isolated computer (a "container") to work in. Claude gets full, unrestricted access inside that container — it can install anything, run anything, break anything — and none of it touches your real computer. Your project files are shared between the container and your computer through a single folder, so you always have access to the work Claude produces.
+**Claude Container solves this problem.** It gives these AI tools their own isolated computer (a "container") to work in. They get full, unrestricted access inside that container — they can install anything, run anything, break anything — and none of it touches your real computer. Your project files are shared between the container and your computer through a single folder, so you always have access to the work they produce.
 
-Think of it like giving Claude its own office with a desk, tools, and a copy machine. Claude can make a mess in that office all day long, and your office stays clean. The copy machine (the shared folder) lets you exchange documents back and forth.
+Think of it like giving your AI assistant its own office with a desk, tools, and a copy machine. It can make a mess in that office all day long, and your office stays clean. The copy machine (the shared folder) lets you exchange documents back and forth.
 
 ---
 
@@ -82,6 +84,18 @@ There are two ways to use Claude Code:
 2. **API key** — You get a key from [console.anthropic.com](https://console.anthropic.com/) and put it in a `.env` file. Usage is billed per conversation. The key looks something like `sk-ant-abc123...`.
 
 **You only need one of these.** If you have a Claude Pro or Max subscription, you don't need an API key at all.
+
+### Pi Coding Agent
+
+**Pi** is an alternative AI coding agent that also runs inside the container. While Claude Code is Anthropic's native CLI, Pi is a more extensible harness that supports multiple AI providers (Anthropic, Google, OpenAI) and can be customized with skills, extensions, and themes. You can use either — or both.
+
+Pi uses API keys for authentication. If you're using it with Anthropic, the same `ANTHROPIC_API_KEY` works. For other providers, set `GOOGLE_API_KEY` or `OPENAI_API_KEY` in your `.env` file.
+
+### agent-sync
+
+**agent-sync** manages AI agent configuration per project. It installs skills (shared across Claude and Pi), Claude-specific hooks and commands, and Pi-specific extensions and prompts. You run it on your Mac (not inside the container), and the files appear in the container through the shared folder.
+
+This is optional — you can use Claude and Pi without agent-sync. But if you want per-project customization of which AI skills are available, agent-sync makes that easy.
 
 ---
 
@@ -215,6 +229,7 @@ just build
 - DuckDB (a fast analytical database)
 - git, just, and build tools
 - Claude Code CLI
+- Pi Coding Agent
 
 The first build downloads a lot and takes several minutes. Future builds are much faster because Docker caches each step.
 
@@ -247,16 +262,20 @@ just login my-first-project
 
 API key users can skip this step — your key was already configured via `.env`.
 
-### Start Claude
+### Start Claude or Pi
 
 ```bash
+# Option A: Claude Code (YOLO mode)
 just claude my-first-project
+
+# Option B: Pi coding agent
+just pi my-first-project
 ```
 
 **What this does:**
 1. Starts the container (if it isn't already running)
-2. Opens Claude Code inside the container in YOLO mode
-3. You now have an interactive conversation with Claude, and Claude has full access to the container
+2. Opens the AI coding assistant inside the container
+3. You now have an interactive conversation, and the AI has full access to the container
 
 You'll see Claude's interface appear. You can type requests like:
 
@@ -324,6 +343,94 @@ Claude has access to everything a regular Linux user would:
 - **Query databases** with DuckDB
 - **Access the internet** to download data or packages
 - **Use `sudo`** (run as administrator) to install system-level software
+
+---
+
+## Working With Pi Inside the Container
+
+### Full Mode vs Restricted Mode
+
+You have two ways to run Pi:
+
+| Command | Mode | When to Use |
+|---------|------|-------------|
+| `just pi my-project` | Full tools | Day-to-day work. Pi has read, bash, edit, and write access. |
+| `just pi-safe my-project` | Read-only | When you want Pi to only read, not modify files. |
+
+Pi's full mode is the default and recommended mode inside containers. Since the container is isolated, there's no risk to your real computer.
+
+### Giving Pi a specific task
+
+You can pass a prompt directly:
+
+```bash
+just pi my-project "Read the CSV files in this directory and create summary statistics"
+```
+
+Or start an interactive session (no prompt) and type your request:
+
+```bash
+just pi my-project
+```
+
+### Pi with different providers
+
+Pi supports multiple AI providers. Set the appropriate API key in your `.env` file:
+
+- **Anthropic** (default): uses `ANTHROPIC_API_KEY`
+- **Google**: uses `GOOGLE_API_KEY`
+- **OpenAI**: uses `OPENAI_API_KEY`
+
+You can also override the provider and model per-session by shelling in:
+
+```bash
+just shell my-project
+pi --provider google --model gemini-2.5-pro
+```
+
+---
+
+## Per-Project Agent Config (agent-sync)
+
+Each project can have its own set of AI skills, extensions, and hooks. This is managed by `agent-sync`, which runs on your Mac and writes files into your project folder. Since the project folder is shared with the container, both Claude and Pi automatically discover the installed skills.
+
+### Prerequisites
+
+Install `agent-sync` on your Mac (one-time). See the agent-sync documentation for installation instructions.
+
+### Adding skills and bundles
+
+```bash
+# Install a bundle (group of related skills)
+just sync my-project bundle/research
+
+# Install individual items
+just sync my-project skill/python-data-sql pi/extension/forge
+
+# See what's installed
+just sync-status my-project
+
+# Remove items
+just sync-remove my-project skill/python-data-sql
+```
+
+### What gets installed where
+
+| Item type | Installed to | Used by |
+|-----------|-------------|--------|
+| `skill/*` | `.agents/skills/*/SKILL.md` | Claude and Pi |
+| `claude/command/*` | `.claude/commands/*.md` | Claude only |
+| `claude/hook/*` | `.claude/hooks/...` | Claude only |
+| `pi/extension/*` | `.pi/extensions/*/` | Pi only |
+| `pi/prompt/*` | `.pi/prompts/*.md` | Pi only |
+
+### Sharing config with collaborators
+
+The `.agent-sync/state.json` file tracks what's installed. Commit it to git. Collaborators restore the same setup with:
+
+```bash
+just sync-restore my-project
+```
 
 ---
 
@@ -646,6 +753,14 @@ Run any of these from the `claude-container` directory:
 | `just claude <name> "prompt"` | Runs Claude with a specific task |
 | `just claude-safe <name>` | Opens Claude with permission prompts |
 | `just claude-safe <name> "prompt"` | Runs safe-mode Claude with a specific task |
+| `just pi <name>` | Opens Pi coding agent (interactive) |
+| `just pi <name> "prompt"` | Runs Pi with a specific task |
+| `just pi-safe <name>` | Opens Pi with restricted tools (read-only) |
+| `just pi-safe <name> "prompt"` | Runs restricted Pi with a specific task |
+| `just sync <name> <items>` | Install agent config (skills, extensions) into project |
+| `just sync-restore <name>` | Restore agent config from `.agent-sync/state.json` |
+| `just sync-status <name>` | Show agent-sync status for a project |
+| `just sync-remove <name> <items>` | Remove agent-sync items from a project |
 | `just cp-to <name> <src> <dest>` | Copies a file from your Mac into the container |
 | `just cp-from <name> <src> <dest>` | Copies a file from the container to your Mac |
 | `just destroy <name>` | Deletes the container (project files are kept) |
@@ -754,7 +869,9 @@ The project includes two configuration files that control how Claude behaves ins
 
 - **`config/claude-settings.json`** — Controls Claude's permission settings. The default grants full access (YOLO mode). You generally don't need to change this.
 
-After editing either file, rebuild the image:
+- **`config/pi-settings.json`** — Controls Pi's default provider and model. The default is Anthropic with Claude Sonnet.
+
+After editing any config file, rebuild the image:
 
 ```bash
 just rebuild
@@ -780,6 +897,9 @@ Existing containers are **not** affected — only new containers created after t
 | **Repository (repo)** | A project folder tracked by git, often hosted on GitHub |
 | **`sudo`** | "Superuser do" — runs a command as the administrator. Inside the container, this works without a password |
 | **Virtual machine (VM)** | A complete simulated computer running inside your real computer |
+| **Pi** | An extensible AI coding agent supporting multiple providers (Anthropic, Google, OpenAI) |
+| **agent-sync** | A tool that manages per-project AI skills, extensions, and config |
+| **Bundle** | A named collection of skills/extensions installed together via agent-sync |
 | **YOLO mode** | Running Claude without permission prompts (safe inside containers) |
 | **`~`** | Shorthand for your home folder in the terminal (e.g., `/Users/yourname` on a Mac) |
 | **`/workspace`** | The directory inside the container that maps to your project folder |
