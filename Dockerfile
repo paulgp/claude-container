@@ -48,9 +48,16 @@ ENV PATH="/home/coder/.local/bin:${PATH}"
 # ── Claude Code CLI ──────────────────────────────────────────────
 RUN curl -fsSL https://claude.ai/install.sh | bash
 
+# ── Pi Coding Agent ─────────────────────────────────────────────
+RUN npm install -g @mariozechner/pi-coding-agent
+
 # ── Config files ─────────────────────────────────────────────────
 RUN mkdir -p /home/coder/.claude
 COPY --chown=coder:coder config/claude-settings.json /home/coder/.claude/settings.json
 COPY --chown=coder:coder config/CLAUDE.md /home/coder/.claude/CLAUDE.md
+
+# ── Pi Config ────────────────────────────────────────────────────
+RUN mkdir -p /home/coder/.pi/agent
+COPY --chown=coder:coder config/pi-settings.json /home/coder/.pi/agent/settings.json
 
 WORKDIR /workspace
