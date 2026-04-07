@@ -76,7 +76,7 @@ Both are available in every container. Use whichever fits your workflow:
 
 ## Per-Project Agent Config (Optional)
 
-> **Note:** The `sync` recipes require [`agent-sync`](https://github.com/kljensen/agent-sync), a separate tool for managing per-project AI skills, extensions, and hooks. `agent-sync` is not included in this repo — you'll need to install it yourself and configure it to point at your own config catalog. The recipes are included here as an example of how to integrate such a tool; feel free to remove them from the Justfile if you don't need them.
+> **Note:** The `sync` recipes require [`agent-sync`](https://github.com/kljensen/agent-sync), a separate tool for managing per-project AI skills, extensions, and hooks. `agent-sync` is not included in this repo — I've made it for myself. The recipes are included here as an example of how to integrate such a tool; feel free to remove them from the Justfile if you don't need them.
 
 If you have `agent-sync` set up, you can provision each project with specific skills and extensions on the **host**. Since the project directory is bind-mounted, the files appear inside the container automatically.
 
