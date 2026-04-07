@@ -1,6 +1,6 @@
 # claude-container
 
-Isolated Docker containers for running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Pi](https://github.com/mariozechner/pi-coding-agent) in fully autonomous mode without affecting your host machine.
+Isolated Docker containers for running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Pi](https://github.com/badlogic/pi-mono) in fully autonomous mode without affecting your host machine.
 
 Project files are bind-mounted so they persist on the host. Containers are long-lived (stop/start). Everything is managed through a Justfile.
 
