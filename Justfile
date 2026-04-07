@@ -46,9 +46,9 @@ create name *DOCKER_ARGS:
     docker create \
         --name {{prefix}}{{name}} \
         --hostname {{name}} \
-        -e ANTHROPIC_API_KEY \
-        -e GOOGLE_API_KEY \
-        -e OPENAI_API_KEY \
+        ${ANTHROPIC_API_KEY:+-e ANTHROPIC_API_KEY} \
+        ${GOOGLE_API_KEY:+-e GOOGLE_API_KEY} \
+        ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \
         -v "$(pwd)/projects/{{name}}:/workspace" \
         {{DOCKER_ARGS}} \
         {{image}} \
@@ -172,7 +172,9 @@ logs name:
 stats:
     docker stats --no-stream --filter "name=^{{prefix}}"
 
-# ── agent-sync (host-side) ────────────────────────────────────────
+# ── agent-sync (host-side, optional) ──────────────────────────────
+# Requires agent-sync (https://github.com/kljensen/agent-sync).
+# These recipes are optional — remove them if you don't use agent-sync.
 
 # Install agent config (skills, extensions, hooks) into a project dir
 sync name +ITEMS:

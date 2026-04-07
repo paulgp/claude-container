@@ -24,7 +24,7 @@ if [[ $# -eq 0 ]]; then
     echo "  ccr claude my-project \"prompt\"    Run Claude with a prompt"
     echo "  ccr claude-safe my-project       Start Claude in safe mode"
     echo "  ccr pi my-project                Start Pi coding agent"
-    echo "  ccr pi my-project \"prompt\"       Run Pi with a prompt"
+    echo "  ccr pi my-project \"prompt\"        Run Pi with a prompt"
     echo "  ccr pi-safe my-project           Start Pi in restricted mode"
     echo "  ccr login my-project             Log in with subscription"
     echo "  ccr shell my-project             Open a shell"

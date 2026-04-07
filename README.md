@@ -23,12 +23,10 @@ just build
 # 3. Create a project
 just create my-project
 
-# 4a. Subscription users: log in once per container
+# 4. Log in (subscription users)
 just login my-project
 
-# 4b. API key users: set your key
-cp .env.example .env
-# Edit .env with your ANTHROPIC_API_KEY, then recreate the container
+# Or for API key users: cp .env.example .env, set your key, recreate container
 
 # 5a. Start Claude
 just claude my-project
@@ -47,8 +45,8 @@ Both are available in every container. Use whichever fits your workflow:
 
 | | Claude Code | Pi |
 |---|---|---|
-| Provider | Anthropic only | Anthropic, Google, OpenAI |
-| Auth | Subscription or API key | API key |
+| Provider | Anthropic only | Anthropic (supports others via shell) |
+| Auth | Subscription or API key | Subscription or API key |
 | Autonomous mode | `--dangerously-skip-permissions` | Default (all tools enabled) |
 | Extensibility | Hooks, commands, agents | Skills, extensions, themes, prompts |
 | Best for | Deep Anthropic integration | Multi-provider, customizable workflows |
@@ -75,40 +73,28 @@ Both are available in every container. Use whichever fits your workflow:
 | `just logs <name>` | Show container logs |
 | `just stats` | Resource usage for all containers |
 | `just colima-start/stop/status` | Manage the Colima VM |
+
+## Per-Project Agent Config (Optional)
+
+> **Note:** The `sync` recipes require [`agent-sync`](https://github.com/kljensen/agent-sync), a separate tool for managing per-project AI skills, extensions, and hooks. `agent-sync` is not included in this repo — you'll need to install it yourself and configure it to point at your own config catalog. The recipes are included here as an example of how to integrate such a tool; feel free to remove them from the Justfile if you don't need them.
+
+If you have `agent-sync` set up, you can provision each project with specific skills and extensions on the **host**. Since the project directory is bind-mounted, the files appear inside the container automatically.
+
+| Recipe | Purpose |
+|--------|--------|
 | `just sync <name> <items>` | Install agent config (skills, extensions) into project |
 | `just sync-restore <name>` | Restore agent config from `state.json` |
 | `just sync-status <name>` | Show agent-sync status |
 | `just sync-remove <name> <items>` | Remove agent-sync items |
 
-## Per-Project Agent Config
-
-Each project can have its own AI skills, extensions, and hooks managed by `agent-sync`. Config is managed on the **host** and appears in containers via the bind mount.
-
-### Prerequisites
-
-Install `agent-sync` on your Mac (one-time). See the agent-sync documentation for installation instructions.
-
-### Adding skills and bundles
-
 ```bash
 # Install a bundle (group of related skills)
 just sync my-project bundle/research
 
-# Install individual items
-just sync my-project skill/python-data-sql pi/extension/forge
-
 # See what's installed
 just sync-status my-project
 
-# Remove items
-just sync-remove my-project skill/python-data-sql
-```
-
-### Sharing config with collaborators
-
-The `.agent-sync/state.json` file tracks what's installed. Commit it to git. Collaborators restore the same setup with:
-
-```bash
+# Collaborators restore the same setup from state.json
 just sync-restore my-project
 ```
 
@@ -144,7 +130,6 @@ ccr build
 ccr create my-project
 ccr claude my-project
 ccr pi my-project
-ccr sync my-project bundle/research
 ccr list
 ccr --recipes          # show all available recipes
 ```
@@ -155,7 +140,6 @@ ccr --recipes          # show all available recipes
 - Containers run `sleep infinity` and you `exec` into them
 - `/workspace` inside the container is bind-mounted to `projects/<name>/` on the host
 - **Subscription auth:** `just login <name>` runs `claude login` inside the container (once per container)
-- **API key auth:** the key flows from `.env` → just → `docker create -e ANTHROPIC_API_KEY`
-- **Pi provider keys:** set `GOOGLE_API_KEY` or `OPENAI_API_KEY` in `.env` for non-Anthropic providers
-- **agent-sync:** runs on the host, writes skills/extensions into the project dir; the container sees them via bind mount
+- **API key auth** (optional): set keys in `.env`; they're forwarded to containers only when present
+- **agent-sync** (optional): runs on the host, writes skills/extensions into the project dir; the container sees them via bind mount
 - `just destroy` removes the container but project files stay in `projects/`

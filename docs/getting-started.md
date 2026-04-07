@@ -9,7 +9,7 @@
 - [Your First Project](#your-first-project)
 - [Working With Claude Inside the Container](#working-with-claude-inside-the-container)
 - [Working With Pi Inside the Container](#working-with-pi-inside-the-container)
-- [Per-Project Agent Config (agent-sync)](#per-project-agent-config-agent-sync)
+- [Per-Project Agent Config (Optional)](#per-project-agent-config-optional)
 - [Managing Your Containers](#managing-your-containers)
 - [Moving Files In and Out](#moving-files-in-and-out)
 - [Use Cases for Academic Research](#use-cases-for-academic-research)
@@ -89,13 +89,13 @@ There are two ways to use Claude Code:
 
 **Pi** is an alternative AI coding agent that also runs inside the container. While Claude Code is Anthropic's native CLI, Pi is a more extensible harness that supports multiple AI providers (Anthropic, Google, OpenAI) and can be customized with skills, extensions, and themes. You can use either — or both.
 
-Pi uses API keys for authentication. If you're using it with Anthropic, the same `ANTHROPIC_API_KEY` works. For other providers, set `GOOGLE_API_KEY` or `OPENAI_API_KEY` in your `.env` file.
+Pi uses API keys for authentication (set `ANTHROPIC_API_KEY` in your `.env` file). Note that `just login` only authenticates Claude Code — Pi requires an API key or an `ANTHROPIC_OAUTH_TOKEN` environment variable.
 
-### agent-sync
+### agent-sync (Optional)
 
-**agent-sync** manages AI agent configuration per project. It installs skills (shared across Claude and Pi), Claude-specific hooks and commands, and Pi-specific extensions and prompts. You run it on your Mac (not inside the container), and the files appear in the container through the shared folder.
+**agent-sync** is a separate tool (not included in this project) that manages AI agent configuration per project. It installs skills (shared across Claude and Pi), Claude-specific hooks and commands, and Pi-specific extensions and prompts. You run it on your Mac (not inside the container), and the files appear in the container through the shared folder.
 
-This is optional — you can use Claude and Pi without agent-sync. But if you want per-project customization of which AI skills are available, agent-sync makes that easy.
+This is entirely optional — you can use Claude and Pi without agent-sync. The Justfile includes `sync` recipes as a convenience if you have your own agent-sync setup. See the [agent-sync documentation](https://github.com/kljensen/agent-sync) for details.
 
 ---
 
@@ -373,30 +373,17 @@ Or start an interactive session (no prompt) and type your request:
 just pi my-project
 ```
 
-### Pi with different providers
-
-Pi supports multiple AI providers. Set the appropriate API key in your `.env` file:
-
-- **Anthropic** (default): uses `ANTHROPIC_API_KEY`
-- **Google**: uses `GOOGLE_API_KEY`
-- **OpenAI**: uses `OPENAI_API_KEY`
-
-You can also override the provider and model per-session by shelling in:
-
-```bash
-just shell my-project
-pi --provider google --model gemini-2.5-pro
-```
-
 ---
 
-## Per-Project Agent Config (agent-sync)
+## Per-Project Agent Config (Optional)
+
+> **Note:** This section describes [`agent-sync`](https://github.com/kljensen/agent-sync), a separate tool that is **not included** in this project. You'll need to install it yourself and configure it to point at your own config catalog. Skip this section if you don't have agent-sync set up.
 
 Each project can have its own set of AI skills, extensions, and hooks. This is managed by `agent-sync`, which runs on your Mac and writes files into your project folder. Since the project folder is shared with the container, both Claude and Pi automatically discover the installed skills.
 
 ### Prerequisites
 
-Install `agent-sync` on your Mac (one-time). See the agent-sync documentation for installation instructions.
+Install `agent-sync` on your Mac and configure it to point at a catalog of skills/extensions. See the [agent-sync documentation](https://github.com/kljensen/agent-sync) for setup instructions.
 
 ### Adding skills and bundles
 
@@ -757,7 +744,7 @@ Run any of these from the `claude-container` directory:
 | `just pi <name> "prompt"` | Runs Pi with a specific task |
 | `just pi-safe <name>` | Opens Pi with restricted tools (read-only) |
 | `just pi-safe <name> "prompt"` | Runs restricted Pi with a specific task |
-| `just sync <name> <items>` | Install agent config (skills, extensions) into project |
+| `just sync <name> <items>` | Install agent config via agent-sync (optional, requires agent-sync) |
 | `just sync-restore <name>` | Restore agent config from `.agent-sync/state.json` |
 | `just sync-status <name>` | Show agent-sync status for a project |
 | `just sync-remove <name> <items>` | Remove agent-sync items from a project |

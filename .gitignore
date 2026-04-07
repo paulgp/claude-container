@@ -1,4 +1,8 @@
 projects/
+workspace/
+workspace-copy/
 .env
 .DS_Store
 .claude/
+*.tar.gz
+build.log
