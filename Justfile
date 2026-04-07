@@ -47,6 +47,8 @@ create name *DOCKER_ARGS:
         --name {{prefix}}{{name}} \
         --hostname {{name}} \
         -e ANTHROPIC_API_KEY \
+        -e GOOGLE_API_KEY \
+        -e OPENAI_API_KEY \
         -v "$(pwd)/projects/{{name}}:/workspace" \
         {{DOCKER_ARGS}} \
         {{image}} \
@@ -113,6 +115,34 @@ claude-safe name *PROMPT:
         docker exec -it {{prefix}}{{name}} claude
     fi
 
+# Run Pi coding agent (auto-starts, optional prompt)
+pi name *PROMPT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    state=$(docker inspect -f '{{{{.State.Status}}}}' {{prefix}}{{name}} 2>/dev/null || true)
+    if [ "$state" != "running" ]; then
+        docker start {{prefix}}{{name}} > /dev/null
+    fi
+    if [ -n "{{PROMPT}}" ]; then
+        docker exec -it {{prefix}}{{name}} pi -p "{{PROMPT}}"
+    else
+        docker exec -it {{prefix}}{{name}} pi
+    fi
+
+# Run Pi with restricted tools (read-only, no bash/write)
+pi-safe name *PROMPT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    state=$(docker inspect -f '{{{{.State.Status}}}}' {{prefix}}{{name}} 2>/dev/null || true)
+    if [ "$state" != "running" ]; then
+        docker start {{prefix}}{{name}} > /dev/null
+    fi
+    if [ -n "{{PROMPT}}" ]; then
+        docker exec -it {{prefix}}{{name}} pi --tools read -p "{{PROMPT}}"
+    else
+        docker exec -it {{prefix}}{{name}} pi --tools read
+    fi
+
 # Copy files from host to container
 cp-to name src dest:
     docker cp {{src}} {{prefix}}{{name}}:{{dest}}
@@ -141,3 +171,46 @@ logs name:
 # Show resource usage for all claude containers
 stats:
     docker stats --no-stream --filter "name=^{{prefix}}"
+
+# ── agent-sync (host-side) ────────────────────────────────────────
+
+# Install agent config (skills, extensions, hooks) into a project dir
+sync name +ITEMS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v agent-sync >/dev/null 2>&1 || { echo "Error: agent-sync not found. Install it first."; exit 1; }
+    [ -d "$(pwd)/projects/{{name}}" ] || { echo "Error: projects/{{name}}/ does not exist. Run 'just create {{name}}' first."; exit 1; }
+    cd "$(pwd)/projects/{{name}}"
+    agent-sync add {{ITEMS}}
+
+# Restore agent config from .agent-sync/state.json
+sync-restore name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v agent-sync >/dev/null 2>&1 || { echo "Error: agent-sync not found. Install it first."; exit 1; }
+    [ -d "$(pwd)/projects/{{name}}" ] || { echo "Error: projects/{{name}}/ does not exist. Run 'just create {{name}}' first."; exit 1; }
+    cd "$(pwd)/projects/{{name}}"
+    if [ ! -f .agent-sync/state.json ]; then
+        echo "No .agent-sync/state.json in projects/{{name}}/."
+        echo "Run 'just sync {{name}} <bundle/item>' first."
+        exit 1
+    fi
+    agent-sync restore
+
+# Show agent-sync status for a project
+sync-status name:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v agent-sync >/dev/null 2>&1 || { echo "Error: agent-sync not found. Install it first."; exit 1; }
+    [ -d "$(pwd)/projects/{{name}}" ] || { echo "Error: projects/{{name}}/ does not exist. Run 'just create {{name}}' first."; exit 1; }
+    cd "$(pwd)/projects/{{name}}"
+    agent-sync status
+
+# Remove agent-sync items from a project
+sync-remove name +ITEMS:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v agent-sync >/dev/null 2>&1 || { echo "Error: agent-sync not found. Install it first."; exit 1; }
+    [ -d "$(pwd)/projects/{{name}}" ] || { echo "Error: projects/{{name}}/ does not exist. Run 'just create {{name}}' first."; exit 1; }
+    cd "$(pwd)/projects/{{name}}"
+    agent-sync remove {{ITEMS}}
