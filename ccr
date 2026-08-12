@@ -26,6 +26,8 @@ if [[ $# -eq 0 ]]; then
     echo "  ccr pi my-project                Start Pi coding agent"
     echo "  ccr pi my-project \"prompt\"        Run Pi with a prompt"
     echo "  ccr pi-safe my-project           Start Pi in restricted mode"
+    echo "  ccr prime my-project             Start Prime Agent"
+    echo "  ccr prime my-project \"prompt\"   Run Prime Agent with a prompt"
     echo "  ccr login my-project             Log in with subscription"
     echo "  ccr shell my-project             Open a shell"
     echo "  ccr sync my-project bundle/research  Install a skill bundle"

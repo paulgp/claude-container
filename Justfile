@@ -47,8 +47,28 @@ create name *DOCKER_ARGS:
         --name {{prefix}}{{name}} \
         --hostname {{name}} \
         ${ANTHROPIC_API_KEY:+-e ANTHROPIC_API_KEY} \
+        ${ANTHROPIC_OAUTH_TOKEN:+-e ANTHROPIC_OAUTH_TOKEN} \
         ${GOOGLE_API_KEY:+-e GOOGLE_API_KEY} \
         ${OPENAI_API_KEY:+-e OPENAI_API_KEY} \
+        ${PRIME_API_KEY:+-e PRIME_API_KEY} \
+        ${GEMINI_API_KEY:+-e GEMINI_API_KEY} \
+        ${OPENROUTER_API_KEY:+-e OPENROUTER_API_KEY} \
+        ${GROQ_API_KEY:+-e GROQ_API_KEY} \
+        ${CEREBRAS_API_KEY:+-e CEREBRAS_API_KEY} \
+        ${XAI_API_KEY:+-e XAI_API_KEY} \
+        ${DEEPSEEK_API_KEY:+-e DEEPSEEK_API_KEY} \
+        ${MISTRAL_API_KEY:+-e MISTRAL_API_KEY} \
+        ${ZAI_API_KEY:+-e ZAI_API_KEY} \
+        ${AI_GATEWAY_API_KEY:+-e AI_GATEWAY_API_KEY} \
+        ${HF_TOKEN:+-e HF_TOKEN} \
+        ${FIREWORKS_API_KEY:+-e FIREWORKS_API_KEY} \
+        ${KIMI_API_KEY:+-e KIMI_API_KEY} \
+        ${MOONSHOT_API_KEY:+-e MOONSHOT_API_KEY} \
+        ${OPENCODE_API_KEY:+-e OPENCODE_API_KEY} \
+        ${CLOUDFLARE_API_KEY:+-e CLOUDFLARE_API_KEY} \
+        ${CLOUDFLARE_ACCOUNT_ID:+-e CLOUDFLARE_ACCOUNT_ID} \
+        ${CLOUDFLARE_GATEWAY_ID:+-e CLOUDFLARE_GATEWAY_ID} \
+        ${PRIME_TEAM_ID:+-e PRIME_TEAM_ID} \
         -v "$(pwd)/projects/{{name}}:/workspace" \
         {{DOCKER_ARGS}} \
         {{image}} \
@@ -141,6 +161,20 @@ pi-safe name *PROMPT:
         docker exec -it {{prefix}}{{name}} pi --tools read -p "{{PROMPT}}"
     else
         docker exec -it {{prefix}}{{name}} pi --tools read
+    fi
+
+# Run Prime Agent (auto-starts, optional prompt)
+prime name *PROMPT:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    state=$(docker inspect -f "{{'{{'}}.State.Status{{'}}'}}" {{prefix}}{{name}} 2>/dev/null || true)
+    if [ "$state" != "running" ]; then
+        docker start {{prefix}}{{name}} > /dev/null
+    fi
+    if [ -n "{{PROMPT}}" ]; then
+        docker exec -it {{prefix}}{{name}} prime-agent -p "{{PROMPT}}"
+    else
+        docker exec -it {{prefix}}{{name}} prime-agent
     fi
 
 # Copy files from host to container

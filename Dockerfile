@@ -37,6 +37,11 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash 
 # ── Pi Coding Agent (global npm install needs root) ──────────────
 RUN npm install -g @mariozechner/pi-coding-agent
 
+# ── Prime Agent ──────────────────────────────────────────────────
+RUN curl -fsSL https://app.primeintellect.ai/prime-agent/install.sh -o /tmp/prime-agent-install.sh \
+    && PRIME_AGENT_INSTALLER_PLAIN=1 sh /tmp/prime-agent-install.sh \
+    && rm /tmp/prime-agent-install.sh
+
 # ── Non-root user with passwordless sudo ─────────────────────────
 RUN useradd -m -s /bin/bash -u 1000 coder \
     && echo "coder ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/coder

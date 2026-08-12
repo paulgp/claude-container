@@ -1,6 +1,6 @@
 # claude-container
 
-Isolated Docker containers for running [Claude Code](https://docs.anthropic.com/en/docs/claude-code) and [Pi](https://github.com/badlogic/pi-mono) in fully autonomous mode without affecting your host machine.
+Isolated Docker containers for running [Claude Code](https://docs.anthropic.com/en/docs/claude-code), [Pi](https://github.com/badlogic/pi-mono), and [Prime Agent](https://github.com/PrimeIntellect-ai/prime-agent) in fully autonomous mode without affecting your host machine.
 
 Project files are bind-mounted so they persist on the host. Containers are long-lived (stop/start). Everything is managed through a Justfile.
 
@@ -33,23 +33,26 @@ just claude my-project
 
 # 5b. Or start Pi
 just pi my-project
+
+# 5c. Or start Prime Agent
+just prime my-project
 ```
 
 ## Tools Inside the Container
 
-git, python3, uv, Node.js 22, R, DuckDB, just, build-essential, Claude Code CLI, Pi Coding Agent.
+git, python3, uv, Node.js 22, R, DuckDB, just, build-essential, Claude Code CLI, Pi Coding Agent, Prime Agent.
 
-## Claude Code vs Pi
+## Claude Code vs Pi vs Prime Agent
 
-Both are available in every container. Use whichever fits your workflow:
+All three are available in every container. Use whichever fits your workflow:
 
-| | Claude Code | Pi |
-|---|---|---|
-| Provider | Anthropic only | Anthropic (supports others via shell) |
-| Auth | Subscription or API key | Subscription or API key |
-| Autonomous mode | `--dangerously-skip-permissions` | Default (all tools enabled) |
-| Extensibility | Hooks, commands, agents | Skills, extensions, themes, prompts |
-| Best for | Deep Anthropic integration | Multi-provider, customizable workflows |
+| | Claude Code | Pi | Prime Agent |
+|---|---|---|---|
+| Provider | Anthropic only | Anthropic (supports others via shell) | Multiple providers |
+| Auth | Subscription or API key | Subscription or API key | `/login` or API key |
+| Autonomous mode | `--dangerously-skip-permissions` | Default (all tools enabled) | Agent-driven IPython control environment |
+| Extensibility | Hooks, commands, agents | Skills, extensions, themes, prompts | Skills, packages, recursive subagents, continual harness |
+| Best for | Deep Anthropic integration | Multi-provider, customizable workflows | Long-running work, subagents, provider flexibility |
 
 ## Recipes
 
@@ -66,6 +69,7 @@ Both are available in every container. Use whichever fits your workflow:
 | `just claude-safe <name> [prompt]` | Run Claude with permission prompts |
 | `just pi <name> [prompt]` | Run Pi coding agent (auto-starts) |
 | `just pi-safe <name> [prompt]` | Run Pi with restricted tools |
+| `just prime <name> [prompt]` | Run Prime Agent (auto-starts) |
 | `just cp-to <name> <src> <dest>` | Copy files from host to container |
 | `just cp-from <name> <src> <dest>` | Copy files from container to host |
 | `just destroy <name>` | Remove container (project files kept) |
@@ -130,6 +134,7 @@ ccr build
 ccr create my-project
 ccr claude my-project
 ccr pi my-project
+ccr prime my-project
 ccr list
 ccr --recipes          # show all available recipes
 ```
@@ -141,5 +146,6 @@ ccr --recipes          # show all available recipes
 - `/workspace` inside the container is bind-mounted to `projects/<name>/` on the host
 - **Subscription auth:** `just login <name>` runs `claude login` inside the container (once per container)
 - **API key auth** (optional): set keys in `.env`; they're forwarded to containers only when present
+- **Prime Agent auth:** run `just prime <name>` and use `/login`, or forward API keys from `.env` when creating the container. Press `Esc` on first-run onboarding to choose another provider or model. For browser OAuth flows inside Docker, copy any failed final `localhost` redirect URL back into Prime Agent when prompted.
 - **agent-sync** (optional): runs on the host, writes skills/extensions into the project dir; the container sees them via bind mount
 - `just destroy` removes the container but project files stay in `projects/`

@@ -9,6 +9,7 @@
 - [Your First Project](#your-first-project)
 - [Working With Claude Inside the Container](#working-with-claude-inside-the-container)
 - [Working With Pi Inside the Container](#working-with-pi-inside-the-container)
+- [Working With Prime Agent Inside the Container](#working-with-prime-agent-inside-the-container)
 - [Per-Project Agent Config (Optional)](#per-project-agent-config-optional)
 - [Managing Your Containers](#managing-your-containers)
 - [Moving Files In and Out](#moving-files-in-and-out)
@@ -21,7 +22,7 @@
 
 ## What Is This and Why Should I Care?
 
-Claude Code and Pi are AI assistants that can read, write, and run code directly on your computer. They are incredibly powerful — they can install software, create files, run scripts, and modify your system. That power is also what makes them risky. If you ask one to "clean up my project" and it misunderstands, it could delete files you care about. If a script goes wrong, it could affect other things on your machine.
+Claude Code, Pi, and Prime Agent are AI assistants that can read, write, and run code directly on your computer. They are incredibly powerful — they can install software, create files, run scripts, and modify your system. That power is also what makes them risky. If you ask one to "clean up my project" and it misunderstands, it could delete files you care about. If a script goes wrong, it could affect other things on your machine.
 
 **Claude Container solves this problem.** It gives these AI tools their own isolated computer (a "container") to work in. They get full, unrestricted access inside that container — they can install anything, run anything, break anything — and none of it touches your real computer. Your project files are shared between the container and your computer through a single folder, so you always have access to the work they produce.
 
@@ -90,6 +91,12 @@ There are two ways to use Claude Code:
 **Pi** is an alternative AI coding agent that also runs inside the container. While Claude Code is Anthropic's native CLI, Pi is a more extensible harness that supports multiple AI providers (Anthropic, Google, OpenAI) and can be customized with skills, extensions, and themes. You can use either — or both.
 
 Pi uses API keys for authentication (set `ANTHROPIC_API_KEY` in your `.env` file). Note that `just login` only authenticates Claude Code — Pi requires an API key or an `ANTHROPIC_OAUTH_TOKEN` environment variable.
+
+### Prime Agent
+
+**Prime Agent** is another AI coding and research agent available inside the container. It is designed for long-running work, recursive subagents, and a persistent Python control environment. You can start it with `just prime <name>`.
+
+Prime Agent can authenticate interactively with `/login` or use API keys forwarded from your `.env` file. Its login state and sessions live inside the container under `/home/coder/.prime`, so they are removed when you destroy the container.
 
 ### agent-sync (Optional)
 
@@ -230,6 +237,7 @@ just build
 - git, just, and build tools
 - Claude Code CLI
 - Pi Coding Agent
+- Prime Agent
 
 The first build downloads a lot and takes several minutes. Future builds are much faster because Docker caches each step.
 
@@ -262,7 +270,7 @@ just login my-first-project
 
 API key users can skip this step — your key was already configured via `.env`.
 
-### Start Claude or Pi
+### Start Claude, Pi, or Prime Agent
 
 ```bash
 # Option A: Claude Code (YOLO mode)
@@ -270,6 +278,9 @@ just claude my-first-project
 
 # Option B: Pi coding agent
 just pi my-first-project
+
+# Option C: Prime Agent
+just prime my-first-project
 ```
 
 **What this does:**
@@ -277,13 +288,13 @@ just pi my-first-project
 2. Opens the AI coding assistant inside the container
 3. You now have an interactive conversation, and the AI has full access to the container
 
-You'll see Claude's interface appear. You can type requests like:
+You'll see the selected agent's interface appear. You can type requests like:
 
 - "Create a Python script that analyzes a CSV file"
 - "Set up a new R project with tidyverse"
 - "Build me a simple web dashboard"
 
-When you're done, press `Ctrl+C` or type `/exit` to leave Claude. The container stays running.
+When you're done, press `Ctrl+C` or use the agent's quit command to leave. The container stays running.
 
 ### Verify your files are shared
 
@@ -374,6 +385,26 @@ just pi my-project
 ```
 
 ---
+
+## Working With Prime Agent Inside the Container
+
+Start Prime Agent with:
+
+```bash
+just prime my-project
+```
+
+On first launch, Prime Agent may show Prime Intellect onboarding. Press `Esc` to choose another provider or model, or run `/login` inside Prime Agent to choose a subscription or API-key provider. If you prefer environment variables, add the relevant keys to `.env` before creating the container, then recreate the container so the variables are forwarded.
+
+For browser OAuth flows inside Docker, the final redirect may go to a `localhost` URL that does not load in your host browser. If that happens, copy the full redirect URL from your browser address bar and paste it back into Prime Agent when prompted.
+
+Run a one-shot prompt with:
+
+```bash
+just prime my-project "Summarize this project and tell me how to run its checks."
+```
+
+Prime Agent works in `/workspace`, the same bind-mounted project directory used by Claude Code and Pi. Its auth and saved sessions are stored in `/home/coder/.prime` inside the container, not on the host.
 
 ## Per-Project Agent Config (Optional)
 
@@ -744,6 +775,7 @@ Run any of these from the `claude-container` directory:
 | `just pi <name> "prompt"` | Runs Pi with a specific task |
 | `just pi-safe <name>` | Opens Pi with restricted tools (read-only) |
 | `just pi-safe <name> "prompt"` | Runs restricted Pi with a specific task |
+| `just prime <name> [prompt]` | Run Prime Agent, optionally with a one-shot prompt. |
 | `just sync <name> <items>` | Install agent config via agent-sync (optional, requires agent-sync) |
 | `just sync-restore <name>` | Restore agent config from `.agent-sync/state.json` |
 | `just sync-status <name>` | Show agent-sync status for a project |
@@ -812,6 +844,8 @@ If you created the container before adding the key, destroy and recreate it:
 just destroy <name>
 just create <name>
 ```
+
+For Prime Agent, launch `just prime <name>` and run `/login`, or set provider keys in `.env` before creating the container. Destroying a container removes Prime Agent auth because `/home/coder/.prime` is not host-mounted.
 
 ### My Mac is slow with containers running
 
